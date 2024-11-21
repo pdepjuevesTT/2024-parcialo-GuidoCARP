@@ -1,8 +1,8 @@
 class FormaDePago{
-    const monto //en el caso de credito, es el monto maximo de la cuota
+    var monto //en el caso de credito, es el monto maximo de la cuota
     method restarDinero(persona,monto1)
 
-    method puedePagar(monto1){
+    method puedePagar(persona,monto1){
         return monto > monto1
     }
 }
@@ -20,28 +20,30 @@ class Debito inherits FormaDePago{
         persona.cuentaBancaria().restarDineroDebito(monto1)
     }
 }
-
+//var credito = new Credito(cantCuotas = 12)
 class Credito inherits FormaDePago{
     const cantCuotas
     
     method calcularInteres(persona,monto1){
-        return (monto1/cantCuotas)*persona.cuentaBancaria().interes()
+        return ((monto1/cantCuotas)*persona.cuentaBancaria().interes())+monto1/cantCuotas
     }
 
     override method restarDinero(persona,monto1){
         persona.cuentaBancaria().restarDineroCredito(self.calcularInteres(persona,monto1))
     }
 
+    override method puedePagar(persona,monto1){
+        return monto > self.calcularInteres(persona,monto1)
+    }
+
 }
 //punto 5
-//inventar una nueva forma de pago a credito con cuotas que haga uso de la herencia 
-//en este caso CreditoFijo hereda de Credito y redefinimos el metodo calcularInteres para que haga de manera distinta la cuenta
 class CreditoFijo inherits Credito{
     override method calcularInteres(persona,monto1){
         return (monto1/cantCuotas)*1000
     }
 }
-
+//var cuentabanc = new CuentaBancaria(saldo = 1000,montoMax = 1000,deudaCuota = 0,interes = 0.1)
 class CuentaBancaria{
     var saldo
 
@@ -58,9 +60,9 @@ class CuentaBancaria{
             deudaCuota += monto
     }
 }  
-
+// var pers = new Persona(formasDePago = [credito],formaPreferida = credito,cuentaBancaria = cuentabanc,dinero = 1000) 
 class Persona{
-    var property sueldo
+    var sueldo
     const formasDePago
     var formaPreferida
     const cuentaBancaria
@@ -74,7 +76,7 @@ class Persona{
     }
 
     method comprar(item){
-        if(formaPreferida.puedePagar(item.precio())){
+        if(formaPreferida.puedePagar(self,item.precio())){
             self.realizarCompra(item, formaPreferida)
         }
     }
@@ -130,10 +132,10 @@ class Item{
 
 class CompradorCompulsivo inherits Persona{
     override method comprar(item){
-        if(formaPreferida.puedePagar(item.precio())){
+        if(formaPreferida.puedePagar(self,item.precio())){
             super(item)
         }else{
-            const formasPosibles = formasDePago.filter({forma => forma.puedePagar(item.precio()) && forma != formaPreferida})
+            const formasPosibles = formasDePago.filter({forma => forma.puedePagar(self,item.precio()) && forma != formaPreferida})
             if(formasPosibles != []){
                 self.realizarCompra(item, formasPosibles.anyOne())
             }
@@ -148,16 +150,5 @@ class PagadorCompulsivo inherits Persona{
             dinero = dinero - monto1
             cuentaBancaria.deudaCuota(0)
         }
-    }
-}
-
-
-//me hace ruido el punto 6 hacerlo de esta manera, pero ahora mismo no se me ocurre otra forma
-object grupoPersonas {
-
-    const personas = []
-
-    method encontrarPersonaConMasCosas(){
-        return personas.max({persona => persona.items().size()})
     }
 }
