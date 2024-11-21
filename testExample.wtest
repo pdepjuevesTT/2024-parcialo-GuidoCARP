@@ -1,9 +1,23 @@
-import example.pepita
+import prueba.*
+describe "test compra en cuotas"{
 
-describe "group of tests for pepita" {
+    test "cobrar sueldo, persona sin dinero cobra su sueldo y le queda 1000"{
+        const credito = new Credito(cantCuotas = 10, monto = 500)
+        const cuentaBanc = new CuentaBancaria(saldo = 1000,interes = 0.1)
+        const pers = new Persona(sueldo = 1000,formasDePago = [credito],formaPreferida = credito,cuentaBancaria = cuentaBanc,dinero = 0)
 
-  test "pepita has initial energy" {
-    assert.equals(100, pepita.energy())
-  }
+        pers.cobrarSalario()
 
+        assert.equals(1000, pers.dinero())
+    }
+
+    test "persona con deuda de 1000, cobra el salario, salda sus deudas y queda sin dinero"{
+        const credito = new Credito(cantCuotas = 10, monto = 500)
+        const cuentaBanc = new CuentaBancaria(saldo = 1000,interes = 0.1,deudaCuota = 1000)
+        const pers = new Persona(sueldo = 1000,formasDePago = [credito],formaPreferida = credito,cuentaBancaria = cuentaBanc,dinero = 0)
+
+        pers.cobrarSalario()
+
+        assert.equals(0, pers.dinero())
+    }
 }
